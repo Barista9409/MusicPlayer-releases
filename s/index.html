@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MusicPlayer を使う人どうしの共有リンクを、アプリで開くためだけのページ(曲の一覧は表示しない) -->
 <meta name="robots" content="noindex">
 <title>MusicPlayer の共有</title>
 <meta property="og:title" content="MusicPlayer の共有">
-<meta property="og:description" content="曲・プレイリストが共有されました。タップして開いてください">
+<meta property="og:description" content="タップして MusicPlayer で開いてください">
 <style>
   :root { --bg:#fff8f8; --fg:#221a1c; --sub:#6d5e61; --card:#f3e6e9; --accent:#8f3d5c; --line:#e5d3d8; }
   @media (prefers-color-scheme: dark) {
@@ -56,23 +57,11 @@
     '<a class="btn" href="' + open + '">MusicPlayer で開く</a>' +
     '<div class="note">開かない時: LINE の中で開いている場合は、右上の ︙ から「ブラウザで開く」を選んでください。' +
     'または、このページのリンクをコピーして、MusicPlayer の検索の 📋 に貼ってください。</div>' +
-    '<ol>';
-  ids.forEach(function (id, i) {
-    html += '<li><a href="https://music.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">' +
-      '<span class="n">' + (i + 1) + '</span>' +
-      '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + id + '/mqdefault.jpg">' +
-      '<span class="t" id="t' + i + '">YouTube Music で聴く</span></a></li>';
-  });
-  html += '</ol>';
+    '';
   app.innerHTML = html;
   document.title = kinds[m[1]] + '「' + name + '」 - MusicPlayer';
-  // 曲名(読めなければ「YouTube Music で聴く」のまま)
-  ids.forEach(function (id, i) {
-    fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id))
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { if (j && j.title) document.getElementById('t' + i).textContent = j.title; })
-      .catch(function () {});
-  });
+  // まずはそのままアプリを開いてみる(ブラウザによってはボタンを押す必要あり)
+  setTimeout(function () { location.href = open; }, 300);
 })();
 </script>
 </body>
