@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>MusicPlayer の共有</title>
+<meta property="og:title" content="MusicPlayer の共有">
+<meta property="og:description" content="曲・プレイリストが共有されました。タップして開いてください">
+<style>
+  :root { --bg:#fff8f8; --fg:#221a1c; --sub:#6d5e61; --card:#f3e6e9; --accent:#8f3d5c; --line:#e5d3d8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1416; --fg:#f2dfe3; --sub:#c3aeb3; --card:#2c2124; --accent:#f0a8c4; --line:#433437; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:20px; margin:4px 0 2px; }
+  .sub { color:var(--sub); font-size:13px; }
+  .btn { display:block; text-align:center; text-decoration:none; background:var(--accent); color:var(--bg);
+         font-weight:600; padding:14px; border-radius:999px; margin:16px 0 8px; font-size:16px; }
+  .note { background:var(--card); border-radius:12px; padding:10px 12px; font-size:12px; color:var(--sub); line-height:1.6; }
+  ol { list-style:none; padding:0; margin:16px 0 0; }
+  li a { display:flex; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); color:inherit; text-decoration:none; }
+  li img { width:64px; height:36px; object-fit:cover; border-radius:6px; background:var(--card); flex:none; }
+  li .t { font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  li .n { color:var(--sub); font-size:12px; width:22px; text-align:right; flex:none; }
+  .err { margin-top:40px; text-align:center; color:var(--sub); }
+</style>
+</head>
+<body>
+<main id="app"><p class="err">読み込んでいます…</p></main>
+<script>
+// 中身はリンクの # より後ろ(サーバーには送られない)。形: 1p.<名前 base64url>.<動画 ID 11 文字 × 曲数>
+(function () {
+  var app = document.getElementById('app');
+  var body = decodeURIComponent((location.hash || '').slice(1));
+  var m = /^1([pas])\.([A-Za-z0-9_-]*)\.([A-Za-z0-9_-]+)$/.exec(body);
+  if (!m || m[3].length % 11 !== 0) {
+    app.innerHTML = '<p class="err">共有のリンクが読み取れませんでした。<br>もう一度送ってもらってください。</p>';
+    return;
+  }
+  var kinds = { p: 'プレイリスト', a: 'アルバム', s: '曲' };
+  var name = '';
+  try {
+    var b = m[2].replace(/-/g, '+').replace(/_/g, '/');
+    while (b.length % 4) b += '=';
+    name = decodeURIComponent(escape(atob(b)));
+  } catch (e) { name = ''; }
+  var ids = m[3].match(/.{11}/g);
+  var esc = function (s) { return s.replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+  var open = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;end';
+  var html = '<div class="sub">MusicPlayer の共有</div>' +
+    '<h1>' + esc(kinds[m[1]] + '「' + name + '」') + '</h1>' +
+    '<div class="sub">' + ids.length + ' 曲</div>' +
+    '<a class="btn" href="' + open + '">MusicPlayer で開く</a>' +
+    '<div class="note">開かない時: LINE の中で開いている場合は、右上の ︙ から「ブラウザで開く」を選んでください。' +
+    'または、このページのリンクをコピーして、MusicPlayer の検索の 📋 に貼ってください。</div>' +
+    '<ol>';
+  ids.forEach(function (id, i) {
+    html += '<li><a href="https://music.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">' +
+      '<span class="n">' + (i + 1) + '</span>' +
+      '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + id + '/mqdefault.jpg">' +
+      '<span class="t" id="t' + i + '">YouTube Music で聴く</span></a></li>';
+  });
+  html += '</ol>';
+  app.innerHTML = html;
+  document.title = kinds[m[1]] + '「' + name + '」 - MusicPlayer';
+  // 曲名(読めなければ「YouTube Music で聴く」のまま)
+  ids.forEach(function (id, i) {
+    fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.title) document.getElementById('t' + i).textContent = j.title; })
+      .catch(function () {});
+  });
+})();
+</script>
+</body>
+</html>
