@@ -20,7 +20,8 @@
   .sub { color:var(--sub); font-size:13px; }
   .btn { display:block; text-align:center; text-decoration:none; background:var(--accent); color:var(--bg);
          font-weight:600; padding:14px; border-radius:999px; margin:16px 0 8px; font-size:16px; }
-  .note { background:var(--card); border-radius:12px; padding:10px 12px; font-size:12px; color:var(--sub); line-height:1.6; }
+  .note a { color:var(--accent); }
+  .note { margin-top:10px; background:var(--card); border-radius:12px; padding:10px 12px; font-size:12px; color:var(--sub); line-height:1.6; }
   ol { list-style:none; padding:0; margin:16px 0 0; }
   li a { display:flex; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); color:inherit; text-decoration:none; }
   li img { width:64px; height:36px; object-fit:cover; border-radius:6px; background:var(--card); flex:none; }
@@ -50,13 +51,18 @@
   } catch (e) { name = ''; }
   var ids = m[3].match(/.{11}/g);
   var esc = function (s) { return s.replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
-  var open = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;end';
+  // アプリが入っていない時は、Play ストアではなくアプリのダウンロードページへ
+  var dl = 'https://github.com/Barista9409/MusicPlayer-releases/releases/latest';
+  var open = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;' +
+    'S.browser_fallback_url=' + encodeURIComponent(dl) + ';end';
   var html = '<div class="sub">MusicPlayer の共有</div>' +
     '<h1>' + esc(kinds[m[1]] + '「' + name + '」') + '</h1>' +
     '<div class="sub">' + ids.length + ' 曲</div>' +
     '<a class="btn" href="' + open + '">MusicPlayer で開く</a>' +
     '<div class="note">開かない時: LINE の中で開いている場合は、右上の ︙ から「ブラウザで開く」を選んでください。' +
     'または、このページのリンクをコピーして、MusicPlayer の検索の 📋 に貼ってください。</div>' +
+    '<div class="note">MusicPlayer をまだ入れていない時: <a href="' + dl + '">こちらからダウンロード</a>' +
+    '(いちばん上の「MusicPlayer.apk」)。入れたあと、もう一度このリンクを開いてください。</div>' +
     '';
   app.innerHTML = html;
   document.title = kinds[m[1]] + '「' + name + '」 - MusicPlayer';
