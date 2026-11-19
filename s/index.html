@@ -62,9 +62,6 @@
   // ボタン用: アプリが無ければダウンロードページへ
   var open = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;' +
     'S.browser_fallback_url=' + encodeURIComponent(dl) + ';end';
-  // 自動で開く用: ダウンロードページへの行き先を付けない
-  // (ブラウザが「押されていない自動の呼び出し」を止めた時に、入っているのにダウンロードページへ飛ばないように)
-  var openAuto = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;end';
   var html = '<div class="sub">MusicPlayer の共有</div>' +
     '<h1>' + esc(kinds[m[1]] + '「' + name + '」') + '</h1>' +
     '<div class="sub">' + ids.length + ' 曲</div>' +
@@ -76,8 +73,7 @@
     '';
   app.innerHTML = html;
   document.title = kinds[m[1]] + '「' + name + '」 - MusicPlayer';
-  // まずはそのままアプリを開いてみる(ブラウザによってはボタンを押す必要あり)
-  setTimeout(function () { location.href = openAuto; }, 300);
+  // 自動ではどこへも移らない(ボタンを押した時だけアプリを開く)
 })();
 </script>
 </body>
