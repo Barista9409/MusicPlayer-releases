@@ -33,10 +33,16 @@
 <body>
 <main id="app"><p class="err">読み込んでいます…</p></main>
 <script>
-// 中身はリンクの # より後ろ(サーバーには送られない)。形: 1p.<名前 base64url>.<動画 ID 11 文字 × 曲数>
+// 中身: 1p.<名前 base64url>.<動画 ID 11 文字 × 曲数>(リンクの ?p= または # の後ろ)
 (function () {
   var app = document.getElementById('app');
-  var body = decodeURIComponent((location.hash || '').slice(1));
+  // 中身は # の後ろ(新しいリンクは ?p= にも入れている。アプリや LINE によっては # の後ろが消えるため)
+  var body = '';
+  try { body = decodeURIComponent((location.hash || '').slice(1)); } catch (e) { body = ''; }
+  if (!body) {
+    var q = /[?&]p=([^&#]*)/.exec(location.search);
+    if (q) { try { body = decodeURIComponent(q[1]); } catch (e) { body = ''; } }
+  }
   var m = /^1([pas])\.([A-Za-z0-9_-]*)\.([A-Za-z0-9_-]+)$/.exec(body);
   if (!m || m[3].length % 11 !== 0) {
     app.innerHTML = '<p class="err">共有のリンクが読み取れませんでした。<br>もう一度送ってもらってください。</p>';
@@ -53,8 +59,12 @@
   var esc = function (s) { return s.replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
   // アプリが入っていない時は、Play ストアではなくアプリのダウンロードページへ
   var dl = 'https://github.com/Barista9409/MusicPlayer-releases/releases/latest';
+  // ボタン用: アプリが無ければダウンロードページへ
   var open = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;' +
     'S.browser_fallback_url=' + encodeURIComponent(dl) + ';end';
+  // 自動で開く用: ダウンロードページへの行き先を付けない
+  // (ブラウザが「押されていない自動の呼び出し」を止めた時に、入っているのにダウンロードページへ飛ばないように)
+  var openAuto = 'intent://share/' + body + '#Intent;scheme=musicplayer;package=com.example.ytmp3;end';
   var html = '<div class="sub">MusicPlayer の共有</div>' +
     '<h1>' + esc(kinds[m[1]] + '「' + name + '」') + '</h1>' +
     '<div class="sub">' + ids.length + ' 曲</div>' +
@@ -67,7 +77,7 @@
   app.innerHTML = html;
   document.title = kinds[m[1]] + '「' + name + '」 - MusicPlayer';
   // まずはそのままアプリを開いてみる(ブラウザによってはボタンを押す必要あり)
-  setTimeout(function () { location.href = open; }, 300);
+  setTimeout(function () { location.href = openAuto; }, 300);
 })();
 </script>
 </body>
